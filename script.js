@@ -35,7 +35,7 @@ const COLOR_THEMES = [
   },
   {
     focusBg: "#cadc70",
-    focusText: "#9244b6",
+    focusText: "#92aab6",
     breakBg: "#f0eee9",
     breakText: "#333333",
   },
