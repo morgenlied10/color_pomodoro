@@ -1,78 +1,55 @@
+:root {
+  --yellow: #f0eee9;
+  --light-gray: #f0eee9;
+  --text-dark: #333333;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
 }
 
-body {
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: var(--yellow);
   overflow: hidden;
-  font-family: system-ui, -apple-system, sans-serif;
+  cursor: pointer;
 }
 
-/* ===== 背景 ===== */
-#base {
-  position: fixed;
-  inset: 0;
-  background: #ffb703;
-  z-index: 0;
-}
-
-#overlay {
-  position: fixed;
+#progress {
+  position: absolute;
   bottom: 0;
-  left: 0;
   width: 100%;
   height: 0%;
-  background: #e0e0dc;
-  z-index: 1;
-  transition: height 0.1s linear;
+  background: var(--light-gray);
 }
 
-/* ===== UI ===== */
-#ui {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+#content {
+  position: relative;
   z-index: 2;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-body:hover #ui {
-  opacity: 1;
-}
-
-#running-ui {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  justify-content: center;
+  color: var(--text-dark);
+  user-select: none;
+}
+
+#icon {
+  font-size: 96px;
+  line-height: 1;
 }
 
 #time {
-  font-size: 6rem;
-  font-weight: 600;
-}
-
-#controls {
-  display: flex;
-  gap: 2rem;
-}
-
-#pause {
-  transform: translateY(0);
-}
-
-#pause.play {
-  transform: scale(0.85);
-}
-
-button {
-  font-size: 3rem;
-  background: none;
-  border: none;
-  cursor: pointer;
+  font-size: 72px;
+  font-weight: 500;
+  display: none;
 }

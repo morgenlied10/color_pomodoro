@@ -2,23 +2,17 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Pomodoro Visual Timer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Color Pomodoro</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <div id="base"></div>
-  <div id="overlay"></div>
+  <div id="app">
+    <div id="progress"></div>
 
-  <div id="ui">
-    <button id="start">▶</button>
-
-    <div id="running-ui">
+    <div id="content">
+      <div id="icon">▶</div>
       <div id="time">25:00</div>
-      <div id="controls">
-        <button id="pause">⏸</button>
-        <button id="stop">■</button>
-      </div>
     </div>
   </div>
 

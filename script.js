@@ -1,123 +1,143 @@
+const app = document.getElementById("app");
+const progress = document.getElementById("progress");
+const icon = document.getElementById("icon");
+const timeEl = document.getElementById("time");
+
+// ---- 設定 ----
 const FOCUS_TIME = 25 * 60;
 const BREAK_TIME = 5 * 60;
 
-let total = FOCUS_TIME;
-let remaining = total;
-let running = false;
-let mode = "focus"; // focus | break
-let lastTimestamp = null;
-let state = "idle"; // idle | running | paused
+// ---- カラーテーマ ----
+const COLOR_THEMES = [
+  {
+    focusBg: "#f5d3c8",
+    focusText: "#e48e79",
+    breakBg: "#f0eee9",
+    breakText: "#333333",
+  },
+  {
+    focusBg: "#ad9883",
+    focusText: "#215db1",
+    breakBg: "#f0eee9",
+    breakText: "#333333",
+  },
+  {
+    focusBg: "#b1d8b9",
+    focusText: "#fb6401",
+    breakBg: "#f0eee9",
+    breakText: "#333333",
+  },
+  {
+    focusBg: "#fbba16",
+    focusText: "#00492c",
+    breakBg: "#f0eee9",
+    breakText: "#333333",
+  },
+  {
+    focusBg: "#cadc70",
+    focusText: "#9244b6",
+    breakBg: "#f0eee9",
+    breakText: "#333333",
+  },
+];
+let currentTheme = COLOR_THEMES[0];
 
-const timeEl = document.getElementById("time");
-const overlay = document.getElementById("overlay");
-const base = document.getElementById("base");
-const startBtn = document.getElementById("start");
-const runningUI = document.getElementById("running-ui");
-const pauseBtn = document.getElementById("pause");
+// ---- 状態 ----
+let mode = "idle"; // idle | focus | break
+let isRunning = false;
+let duration = FOCUS_TIME;
+let remaining = duration;
+let timerId = null;
 
+// ---- ユーティリティ ----
 function formatTime(sec) {
   const m = String(Math.floor(sec / 60)).padStart(2, "0");
   const s = String(sec % 60).padStart(2, "0");
   return `${m}:${s}`;
 }
 
+// ---- UI更新 ----
 function updateUI() {
   timeEl.textContent = formatTime(remaining);
-  overlay.style.height = `${(1 - remaining / total) * 100}%`;
+
+  const progressRatio = (duration - remaining) / duration;
+  progress.style.height = `${progressRatio * 100}%`;
 }
 
-function updatePauseIcon() {
-  pauseBtn.textContent = state === "paused" ? "▶" : "⏸";
+// ---- ランダムテーマ ----	
+function pickRandomTheme() {
+  const index = Math.floor(Math.random() * COLOR_THEMES.length);
+  currentTheme = COLOR_THEMES[index];
 }
 
-function setState(newState) {
-  state = newState;
+// ---- モード切替 ----
+function startFocus() {
+  mode = "focus";
+  duration = FOCUS_TIME;
+  remaining = duration;
+  isRunning = true;
 
-  if (state === "idle") {
-    startBtn.style.display = "block";
-    runningUI.style.display = "none";
-  } else {
-    startBtn.style.display = "none";
-    runningUI.style.display = "flex";
-  }
+  pickRandomTheme();
+
+  app.style.background = currentTheme.focusBg;
+  progress.style.background = currentTheme.breakBg;
+  timeEl.style.color = currentTheme.focusText;
+  icon.style.color = currentTheme.focusText;
+
+  icon.style.display = "none";
+  timeEl.style.display = "block";
+
+  startTimer();
 }
 
-function switchMode() {
-  if (mode === "focus") {
-    mode = "break";
-    total = BREAK_TIME;
-    base.style.background = "#e0e0dc";
-    overlay.style.background = "#ffb703";
-  } else {
-    mode = "focus";
-    total = FOCUS_TIME;
-    base.style.background = "#ffb703";
-    overlay.style.background = "#e0e0dc";
-  }
-  remaining = total;
-  overlay.style.height = "0%";
+function startBreak() {
+  mode = "break";
+  duration = BREAK_TIME;
+  remaining = duration;
+  isRunning = true;
+
+  app.style.background = currentTheme.breakBg;
+  progress.style.background = currentTheme.focusBg;
+  timeEl.style.color = currentTheme.breakText;
+  icon.style.color = currentTheme.breakText;
+
+  startTimer();
 }
 
-function tick(timestamp) {
-  if (!running) return;
+// ---- タイマー ----
+function startTimer() {
+  clearInterval(timerId);
+  updateUI();
 
-  if (!lastTimestamp) lastTimestamp = timestamp;
-  const delta = Math.floor((timestamp - lastTimestamp) / 1000);
+  timerId = setInterval(() => {
+    if (!isRunning) return;
 
-  if (delta > 0) {
-    remaining -= delta;
-    lastTimestamp += delta * 1000;
+    remaining--;
     updateUI();
 
     if (remaining <= 0) {
-      switchMode();
-    }
-  }
+      clearInterval(timerId);
+      progress.style.height = "0%";
 
-  requestAnimationFrame(tick);
+      if (mode === "focus") {
+        startBreak();
+      } else {
+        startFocus();
+      }
+    }
+  }, 1000);
 }
 
-/* ===== ボタン処理 ===== */
+// ---- 一時停止 / 再開 ----
+function togglePause() {
+  isRunning = !isRunning;
+}
 
-startBtn.onclick = () => {
-  if (state === "idle") {
-    setState("running");
-    running = true;
-    lastTimestamp = null;
-    updatePauseIcon();
-    requestAnimationFrame(tick);
+// ---- クリック操作 ----
+app.addEventListener("click", () => {
+  if (mode === "idle") {
+    startFocus();
+  } else {
+    togglePause();
   }
-};
-
-pauseBtn.onclick = () => {
-  if (state === "running") {
-    running = false;
-    state = "paused";
-    lastTimestamp = null;
-  } else if (state === "paused") {
-    running = true;
-    state = "running";
-    lastTimestamp = null;
-    requestAnimationFrame(tick);
-  }
-
-  updatePauseIcon();
-};
-
-document.getElementById("stop").onclick = () => {
-  running = false;
-  mode = "focus";
-  total = FOCUS_TIME;
-  remaining = total;
-  base.style.background = "#ffb703";
-  overlay.style.background = "#e0e0dc";
-  overlay.style.height = "0%";
-  updateUI();
-  setState("idle");
-  updatePauseIcon();
-};
-
-/* 初期化 */
-updateUI();
-setState("idle");
-updatePauseIcon();
+});
