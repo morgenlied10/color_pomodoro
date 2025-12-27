@@ -40,7 +40,8 @@ const COLOR_THEMES = [
     breakText: "#333333",
   },
 ];
-let currentTheme = COLOR_THEMES[0];
+let currentTheme = COLOR_THEMES[0]; // 今の集中用
+let nextTheme = null;              // 次の集中用
 
 // ---- 状態 ----
 let mode = "idle"; // idle | focus | break
@@ -65,9 +66,13 @@ function updateUI() {
 }
 
 // ---- ランダムテーマ ----	
-function pickRandomTheme() {
-  const index = Math.floor(Math.random() * COLOR_THEMES.length);
-  currentTheme = COLOR_THEMES[index];
+function pickRandomThemeExcept(exceptTheme) {
+  let theme;
+  do {
+    const index = Math.floor(Math.random() * COLOR_THEMES.length);
+    theme = COLOR_THEMES[index];
+  } while (theme === exceptTheme);
+  return theme;
 }
 
 // ---- モード切替 ----
@@ -76,8 +81,6 @@ function startFocus() {
   duration = FOCUS_TIME;
   remaining = duration;
   isRunning = true;
-
-  pickRandomTheme();
 
   app.style.background = currentTheme.focusBg;
   progress.style.background = currentTheme.breakBg;
@@ -96,13 +99,17 @@ function startBreak() {
   remaining = duration;
   isRunning = true;
 
-  app.style.background = currentTheme.breakBg;
-  progress.style.background = currentTheme.focusBg;
+  // ★ 次に使う色をここで決める
+  nextTheme = pickRandomThemeExcept(currentTheme);
+
+  app.style.background = currentTheme.breakBg;      // グレー
+  progress.style.background = nextTheme.focusBg;   // 次の色がせり上がる
   timeEl.style.color = currentTheme.breakText;
   icon.style.color = currentTheme.breakText;
 
   startTimer();
 }
+
 
 // ---- タイマー ----
 function startTimer() {
@@ -115,16 +122,19 @@ function startTimer() {
     remaining--;
     updateUI();
 
-    if (remaining <= 0) {
-      clearInterval(timerId);
-      progress.style.height = "0%";
+  if (remaining <= 0) {
+    clearInterval(timerId);
+    progress.style.height = "0%";
 
-      if (mode === "focus") {
-        startBreak();
-      } else {
-        startFocus();
-      }
+    if (mode === "focus") {
+      startBreak();
+    } else {
+      // ★ ここで色を確定
+      currentTheme = nextTheme;
+      startFocus();
     }
+  }
+
   }, 1000);
 }
 
